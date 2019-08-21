@@ -16,6 +16,8 @@ namespace CS321_W5D1_ExerciseLogAPI.Core.Services
         void Remove(Activity todo);
         // list
         IEnumerable<Activity> GetAll();
+
         // TODO: Class Project: Add GetAllForUser method
+        IEnumerable<Activity> GetAllForUser(string userId);
     }
 }

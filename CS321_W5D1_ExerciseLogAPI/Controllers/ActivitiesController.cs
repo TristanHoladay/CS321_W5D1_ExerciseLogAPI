@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using CS321_W5D1_ExerciseLogAPI.ApiModels;
 using CS321_W5D1_ExerciseLogAPI.Core.Services;
@@ -11,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CS321_W5D1_ExerciseLogAPI.Controllers
 {
-    // TODO: Prep Part 2: Add authorization
+    [Authorize]
     [Route("api/[controller]")]
     public class ActivitiesController : Controller
     {
@@ -23,14 +24,30 @@ namespace CS321_W5D1_ExerciseLogAPI.Controllers
         }
 
         // TODO: Class Project: Add CurrentUserId property
+        private string CurrentUserId
+        {
+            get
+            {
+                return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            }
+        }
 
         // GET api/activities
         [HttpGet]
         public IActionResult Get()
         {
+            if(User.IsInRole("Admin"))
+            {
+                var allActivities = _activityService
+                    .GetAll()
+                    .ToApiModels();
+                return Ok(allActivities);
+            }
+
+           
             // TODO: Class Project: Only return users data, unless Admin
             var activityModels = _activityService
-                .GetAll()
+                .GetAllForUser(CurrentUserId)
                 .ToApiModels(); // convert activities to ActivityModels
 
             return Ok(activityModels);
@@ -44,6 +61,13 @@ namespace CS321_W5D1_ExerciseLogAPI.Controllers
             // TODO: Class Project: Only return users data, unless Admin
             var activity = _activityService.Get(id);
             if (activity == null) return NotFound();
+
+            if(activity.UserId != CurrentUserId && !User.IsInRole("Admin"))
+            {
+                ModelState.AddModelError("UserId", "You can only retrieve your own activities.");
+                return BadRequest(ModelState);
+            }
+
             return Ok(activity.ToApiModel());
         }
 
@@ -86,5 +110,13 @@ namespace CS321_W5D1_ExerciseLogAPI.Controllers
         }
 
         // TODO: Class Project: Add new Delete route
+        //Delete All (Admin's Only)
+        //api/activities
+        [Authorize(Roles = "Admin")]
+        [HttpDelete]
+        public IActionResult Delete()
+        {
+            return Ok("Delete all activities");
+        }
     }
 }

@@ -70,5 +70,13 @@ namespace CS321_W5D1_ExerciseLogAPI.Infrastructure.Data
         }
 
         // TODO: Class Project: Add GetAllForUser() method
+        public IEnumerable<Activity> GetAllForUser(string userId)
+        {
+            return _dbContext.Activities
+                .Include(a => a.ActivityType)
+                .Include(a => a.User)
+                .Where(a => a.UserId == userId)
+                .ToList();
+        }
     }
 }
